@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111827">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="AI Music Video">
+<link rel="manifest" href="manifest.webmanifest">
+<title>AI Music Video</title>
+<style>
+:root{color-scheme:dark;--bg:#0a0f1d;--panel:#151d30;--line:#2b3854;--muted:#aab5ca;--purple:#8b5cf6}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(160deg,#11182a,#080c15 72%);color:#f8fafc;font:16px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+main{max-width:760px;margin:auto;padding:calc(14px + env(safe-area-inset-top)) 14px calc(30px + env(safe-area-inset-bottom))}
+header{display:flex;align-items:center;gap:12px;margin:6px 0 18px}.logo{width:48px;height:48px;display:grid;place-items:center;border-radius:15px;background:linear-gradient(135deg,#c4b5fd,#6d28d9);font-size:25px}h1{font-size:20px;margin:0}header p{margin:4px 0 0;color:var(--muted);font-size:13px}
+.card{background:rgba(21,29,48,.96);border:1px solid var(--line);border-radius:18px;padding:15px;margin:12px 0}.label{display:block;font-weight:700;margin:0 0 9px}.hint{font-size:13px;color:var(--muted);line-height:1.5;margin:8px 0 0}
+.field{width:100%;background:#0b1222;color:#fff;border:1px solid #384563;border-radius:11px;padding:12px;font:inherit}textarea{resize:vertical;min-height:130px}.btn{border:0;border-radius:12px;padding:12px 14px;font-size:14px;font-weight:750;cursor:pointer}.primary{background:linear-gradient(100deg,#8b5cf6,#6d28d9);color:#fff;width:100%;margin-top:12px}.secondary{background:#2a3550;color:#fff}.danger{background:#4a2633;color:#fff}.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.row>*{flex:1}.small{font-size:12px;padding:9px}.status{font-size:13px;color:#c4b5fd;line-height:1.5;margin-top:10px;white-space:pre-wrap}
+.preview{position:relative;width:min(100%,340px);aspect-ratio:9/16;margin:14px auto 0;overflow:hidden;border-radius:18px;border:1px solid #3b4665;background:#15182d;box-shadow:0 12px 35px #0005}.preview canvas{display:block;width:100%;height:100%}.player{width:100%;margin-top:10px}.meter{height:6px;border-radius:8px;background:#2b3550;overflow:hidden;margin-top:10px}.meter>div{height:100%;width:0;background:#a78bfa}
+.notice{padding:12px;border:1px solid #6b5126;background:#2b2417;border-radius:12px;color:#ffe0a3;font-size:13px;line-height:1.5}.good{color:#a7f3d0}.filelist{font-size:13px;color:#cbd5e1;line-height:1.6}.footer{font-size:12px;color:var(--muted);line-height:1.6;padding:6px}
+@media(max-width:430px){.card{padding:13px}.row{align-items:stretch}.row>*{min-width:calc(50% - 8px)}}
+</style>
+</head>
+<body>
+<main>
+<header><div class="logo">♫</div><div><h1>AI MUSIC VIDEO</h1><p>MV dọc 9:16 · xử lý trực tiếp trên thiết bị</p></div></header>
+
+<section class="card">
+  <label class="label" for="audioFile">1. Chọn bài hát</label>
+  <input class="field" id="audioFile" type="file" accept="audio/*">
+  <audio id="audio" class="player" controls preload="metadata"></audio>
+  <p class="hint">Chọn file MP3/M4A/WAV trong ứng dụng Tệp. File không được tải lên máy chủ.</p>
+</section>
+
+<section class="card">
+  <label class="label" for="imageFiles">2. Chọn ảnh nền cho MV</label>
+  <input class="field" id="imageFiles" type="file" accept="image/*" multiple>
+  <p class="hint">Chọn nhiều ảnh theo thứ tự bạn muốn. App sẽ tự chuyển ảnh, phóng to/chuyển động nhẹ kiểu Ken Burns. Bản này chưa tự sinh cảnh bằng AI.</p>
+  <div class="filelist" id="imageNames">Chưa chọn ảnh.</div>
+  <div class="row" style="margin-top:10px">
+    <div><label class="label" for="sceneSecs">Đổi cảnh mỗi</label><select class="field" id="sceneSecs"><option value="4">4 giây</option><option value="6" selected>6 giây</option><option value="8">8 giây</option><option value="12">12 giây</option></select></div>
+    <div><label class="label" for="motion">Chuyển động</label><select class="field" id="motion"><option value="slow" selected>Zoom nhẹ</option><option value="static">Đứng yên</option></select></div>
+  </div>
+</section>
+
+<section class="card">
+  <label class="label" for="lyrics">3. Dán lời bài hát kèm mốc thời gian</label>
+  <textarea class="field" id="lyrics" spellcheck="false" placeholder="[00:00.0] Dòng lời đầu tiên&#10;[00:05.2] Dòng lời tiếp theo&#10;[00:09.8] Dòng lời thứ ba"></textarea>
+  <p class="hint">Mỗi dòng một câu, có thời gian bắt đầu theo dạng [phút:giây.tích tắc]. Ví dụ [01:12.5] là 1 phút 12,5 giây. Lời sẽ đổi theo mốc đã nhập; app không tự nhận dạng lời hát.</p>
+  <div class="row" style="margin-top:10px">
+    <button class="btn secondary" id="sampleLyrics">Điền lời mẫu</button>
+    <button class="btn secondary" id="clearLyrics">Xóa lời</button>
+  </div>
+</section>
+
+<section class="card">
+  <label class="label">4. Xem trước MV</label>
+  <div class="preview"><canvas id="canvas" width="720" height="1280"></canvas></div>
+  <div class="meter"><div id="progress"></div></div>
+  <div class="status" id="status" role="status">Chọn bài hát, ảnh nền và lời có mốc thời gian để bắt đầu.</div>
+  <div class="row" style="margin-top:10px">
+    <button class="btn primary" id="play">▶ Xem trước</button>
+    <button class="btn secondary" id="pause">Tạm dừng</button>
+  </div>
+  <button class="btn primary" id="export">Xuất video</button>
+  <p class="hint">Xuất video dùng chức năng ghi hình của trình duyệt. Nếu Safari trên thiết bị không hỗ trợ định dạng ghi hình phù hợp, app sẽ báo rõ và không giả vờ đã xuất thành công. Video dài/ảnh lớn có thể làm iPhone nóng hoặc thiếu bộ nhớ.</p>
+  <a id="download" hidden class="btn secondary" style="text-align:center;margin-top:10px">Tải video đã xuất</a>
+</section>
+
+<section class="card">
+  <label class="label">Trạng thái chức năng</label>
+  <p class="hint"><span class="good">Đã tích hợp:</span> chọn nhạc cục bộ, nhiều ảnh, chuyển cảnh đơn giản, lời chạy theo mốc thời gian do bạn nhập, xem trước dọc 9:16, thử xuất video nếu trình duyệt hỗ trợ.</p>
+  <p class="hint"><strong>Chưa tích hợp:</strong> AI phân tích bài hát để tự chọn cảnh, tự nhận dạng lời hát, căn từng từ theo giọng hát, tạo video AI, và xuất MP4 bảo đảm tương thích trên mọi iPhone. Những chức năng đó cần dịch vụ/API hoặc pipeline xử lý riêng.</p>
+</section>
+<p class="footer">Bản PWA thử nghiệm. Để cài như app cần mở từ website HTTPS, sau đó Safari → Chia sẻ → Thêm vào Màn hình chính. Tệp nhạc/ảnh được xử lý cục bộ trong trình duyệt. Hãy chỉ dùng nội dung bạn có quyền sử dụng.</p>
+</main>
+<script>
+(() => {
+const $ = id => document.getElementById(id);
+const audio=$('audio'), canvas=$('canvas'), ctx=canvas.getContext('2d',{alpha:false});
+let audioUrl=null, imageEntries=[], lyrics=[], raf=0, isDrawing=false, exportUrl=null, exportName='mv.webm';
+const W=720,H=1280;
+function parseTime(str){const p=str.split(':');if(p.length!==2)return NaN;return Number(p[0])*60+Number(p[1]);}
+function parseLyrics(){
+  lyrics=$('lyrics').value.split(/\r?\n/).map(line=>{
+    const m=line.match(/^\s*\[(\d{1,3}:\d{2}(?:\.\d{1,2})?)\]\s*(.*?)\s*$/);
+    return m?{t:parseTime(m[1]),text:m[2]}:null;
+  }).filter(x=>x&&Number.isFinite(x.t)&&x.text).sort((a,b)=>a.t-b.t);
+}
+function activeLyric(t){let found=-1;for(let i=0;i<lyrics.length;i++){if(lyrics[i].t<=t)found=i;else break;}return found;}
+function roundedRect(x,y,w,h,r){ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fill();}
+function draw(){
+ const t=audio.currentTime||0;ctx.clearRect(0,0,W,H);
+ const sceneLen=Number($('sceneSecs').value)||6;
+ let idx=imageEntries.length?Math.floor(t/sceneLen)%imageEntries.length:-1;
+ const entry=idx>=0?imageEntries[idx]:null;
+ if(entry&&entry.img.complete){
+   const im=entry.img, scale=Math.max(W/im.width,H/im.height);
+   const extra=$('motion').value==='slow'?.08:0;
+   const phase=(t%sceneLen)/sceneLen;
+   const z=scale*(1+extra*phase);
+   const dw=im.width*z, dh=im.height*z;
+   const sway=$('motion').value==='slow'?(phase-.5)*W*.035:0;
+   ctx.drawImage(im,(W-dw)/2+sway,(H-dh)/2,dw,dh);
+   ctx.fillStyle='rgba(3,6,16,.18)';ctx.fillRect(0,0,W,H);
+ }else{
+   const g=ctx.createLinearGradient(0,0,W,H);g.addColorStop(0,'#43356f');g.addColorStop(.5,'#17223b');g.addColorStop(1,'#080c15');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+   for(let i=0;i<28;i++){const x=(i*97)%W,y=(i*193)%H;ctx.fillStyle='rgba(255,255,255,.13)';ctx.beginPath();ctx.arc(x,y,2+(i%3),0,Math.PI*2);ctx.fill();}
+ }
+ const shade=ctx.createLinearGradient(0,H*.56,0,H);shade.addColorStop(0,'rgba(0,0,0,0)');shade.addColorStop(.35,'rgba(0,0,0,.62)');shade.addColorStop(1,'rgba(0,0,0,.9)');ctx.fillStyle=shade;ctx.fillRect(0,0,W,H);
+ ctx.textAlign='center';ctx.fillStyle='rgba(255,255,255,.85)';ctx.font='600 22px -apple-system,Arial';ctx.fillText('AI MUSIC VIDEO',W/2,75);
+ const li=activeLyric(t);const text=li>=0?lyrics[li].text:(lyrics.length?'♪':'Dán lời bài hát có mốc thời gian');
+ const next=li>=0&&lyrics[li+1]?lyrics[li+1].text:'';
+ const maxWidth=W-90;let words=text.split(/\s+/), linesOut=[], line='';
+ ctx.font='bold 43px -apple-system,Arial';
+ for(const word of words){const test=line?line+' '+word:word;if(ctx.measureText(test).width>maxWidth&&line){linesOut.push(line);line=word;}else line=test;}if(line)linesOut.push(line);
+ let y=H-220-(linesOut.length-1)*52;ctx.lineWidth=5;ctx.lineJoin='round';ctx.strokeStyle='rgba(0,0,0,.95)';ctx.fillStyle='#fff';
+ for(const l of linesOut){ctx.strokeText(l,W/2,y,maxWidth);ctx.fillText(l,W/2,y,maxWidth);y+=52;}
+ if(next){ctx.font='26px -apple-system,Arial';ctx.fillStyle='rgba(255,255,255,.7)';ctx.fillText(next,W/2,H-90,maxWidth);}
+ $('progress').style.width=(audio.duration?Math.min(100,t/audio.duration*100):0)+'%';
+}
+function loop(){if(!isDrawing)return;draw();if(!audio.paused&&!audio.ended)raf=requestAnimationFrame(loop);}
+function startLoop(){if(!isDrawing){isDrawing=true;loop();}}
+function stopLoop(){isDrawing=false;cancelAnimationFrame(raf);draw();}
+$('audioFile').addEventListener('change',()=>{const f=$('audioFile').files&&$('audioFile').files[0];if(!f)return;if(audioUrl)URL.revokeObjectURL(audioUrl);audioUrl=URL.createObjectURL(f);audio.src=audioUrl;$('status').textContent='Đã chọn nhạc: '+f.name;draw();});
+$('imageFiles').addEventListener('change',()=>{imageEntries.forEach(e=>URL.revokeObjectURL(e.url));imageEntries=[];const files=[...($('imageFiles').files||[])];let loaded=0;for(const f of files){if(!f.type.startsWith('image/'))continue;const url=URL.createObjectURL(f),img=new Image();img.onload=()=>{loaded++;draw();};img.src=url;imageEntries.push({url,img,name:f.name});}$('imageNames').textContent=files.length?files.map((f,i)=>(i+1)+'. '+f.name).join('\n'):'Chưa chọn ảnh.';$('status').textContent='Đã chọn '+imageEntries.length+' ảnh nền.';draw();});
+$('lyrics').addEventListener('input',()=>{parseLyrics();draw();});
+['sceneSecs','motion'].forEach(id=>$(id).addEventListener('change',draw));
+$('sampleLyrics').addEventListener('click',()=>{$('lyrics').value='[00:00.0] Đời anh có em rồi\n[00:04.0] Bình yên như nắng cuối trời\n[00:08.0] Dẫu mai giông tố đầy vơi\n[00:12.0] Mình cùng đi hết cuộc đời';parseLyrics();draw();$('status').textContent='Đã điền lời mẫu minh họa. Bạn cần sửa mốc theo bài hát thật.';});
+$('clearLyrics').addEventListener('click',()=>{$('lyrics').value='';parseLyrics();draw();});
+$('play').addEventListener('click',async()=>{if(!audio.src){$('status').textContent='Hãy chọn bài hát trước.';return;}parseLyrics();try{await audio.play();startLoop();$('status').textContent='Đang phát xem trước.';}catch(e){$('status').textContent='Không phát được tệp. Thử MP3/M4A khác và bấm lại.';}});
+$('pause').addEventListener('click',()=>{audio.pause();stopLoop();$('status').textContent='Đã tạm dừng.';});
+audio.addEventListener('play',startLoop);audio.addEventListener('pause',()=>{if(audio.ended)stopLoop();});audio.addEventListener('ended',()=>{stopLoop();$('status').textContent='Phát xong.';});
+function bestMime(){if(!window.MediaRecorder)return '';const types=['video/mp4;codecs=h264,aac','video/mp4','video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'];return types.find(t=>MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported(t))||'';}
+$('export').addEventListener('click',async()=>{
+ if(!audio.src){$('status').textContent='Hãy chọn bài hát trước.';return;}
+ if(!imageEntries.length){$('status').textContent='Hãy chọn ít nhất một ảnh nền trước khi xuất.';return;}
+ if(!canvas.captureStream||!window.MediaRecorder){$('status').textContent='Trình duyệt này không hỗ trợ ghi video từ canvas. Bạn vẫn có thể xem trước; hãy thử Safari phiên bản mới nhất.';return;}
+ const mime=bestMime();if(!mime){$('status').textContent='Không tìm thấy định dạng video được trình duyệt hỗ trợ để ghi. Chưa tạo file.';return;}
+ const oldTime=audio.currentTime;const wasPaused=audio.paused;audio.pause();audio.currentTime=0;draw();
+ let audioCtx=null, source=null, dest=null, stream=null, recorder=null, chunks=[];
+ try{
+   audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+   await audioCtx.resume();
+   source=audioCtx.createMediaElementSource(audio);dest=audioCtx.createMediaStreamDestination();source.connect(dest);source.connect(audioCtx.destination);
+   const vstream=canvas.captureStream(30);stream=new MediaStream([...vstream.getVideoTracks(),...dest.stream.getAudioTracks()]);
+   recorder=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:3500000,audioBitsPerSecond:128000});
+   chunks=[];recorder.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data);};
+   recorder.onerror=()=>{$('status').textContent='Trình duyệt gặp lỗi khi ghi. Thử bài ngắn hơn hoặc giảm kích thước ảnh.';};
+   recorder.onstop=()=>{
+     try{
+       const blob=new Blob(chunks,{type:mime.split(';')[0]});if(!blob.size){$('status').textContent='File xuất rỗng; trình duyệt có thể không hỗ trợ ghi âm thanh.';return;}
+       if(exportUrl)URL.revokeObjectURL(exportUrl);exportUrl=URL.createObjectURL(blob);
+       const ext=mime.includes('mp4')?'mp4':'webm';exportName='ai-music-video.'+ext;
+       const a=$('download');a.href=exportUrl;a.download=exportName;a.hidden=false;a.style.display='block';a.textContent='Tải video '+ext.toUpperCase()+' ('+(blob.size/1024/1024).toFixed(1)+' MB)';
+       $('status').textContent='Đã tạo file '+ext.toUpperCase()+'. Bấm nút Tải video để lưu. Nếu iPhone không lưu được trực tiếp, mở file rồi dùng Chia sẻ → Lưu video hoặc Lưu vào Tệp.';
+     }catch(err){$('status').textContent='Không thể chuẩn bị file tải xuống: '+err.message;}
+     stream&&stream.getTracks().forEach(t=>t.stop());audioCtx&&audioCtx.close().catch(()=>{});
+     audio.currentTime=oldTime;if(wasPaused){audio.pause();stopLoop();}
+   };
+   recorder.start(1000);audio.currentTime=0;startLoop();await audio.play();$('status').textContent='Đang ghi video theo thời gian thực. Không khóa màn hình hoặc chuyển app trong lúc xuất.';
+   audio.onended=()=>{stopLoop();if(recorder&&recorder.state!=='inactive')recorder.stop();audio.onended=null;};
+ }catch(err){
+   stream&&stream.getTracks().forEach(t=>t.stop());if(audioCtx)audioCtx.close().catch(()=>{});
+   $('status').textContent='Không thể bắt đầu xuất video trên trình duyệt này: '+err.message+'. Xem trước vẫn dùng được; hãy thử Safari mới nhất.';
+ }
+});
+draw();
+if('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('./sw.js').catch(()=>{});
+})();
+</script>
+</body>
+</html>

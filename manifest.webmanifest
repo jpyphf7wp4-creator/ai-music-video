@@ -1,0 +1,12 @@
+{
+  "name": "AI Music Video",
+  "short_name": "Music Video",
+  "description": "Tạo video nhạc dọc từ bài hát, ảnh nền và lời có mốc thời gian.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a0f1d",
+  "theme_color": "#111827",
+  "icons": []
+}
